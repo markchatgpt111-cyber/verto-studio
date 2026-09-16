@@ -7,8 +7,6 @@
   const loading = document.querySelector("[data-scene-loading]");
   const loadingBar = document.querySelector("[data-scene-progress-bar]");
   const loadingLabel = document.querySelector("[data-scene-loading-label]");
-  const sceneLabel = document.querySelector("[data-scene-label]");
-  const sceneProgress = document.querySelector("[data-scene-progress]");
   const hudFill = document.querySelector("[data-scene-hud-fill]");
   const chapters = [...document.querySelectorAll("[data-flight-chapter]")];
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -16,7 +14,6 @@
     "./assets/rocket-sequence/web/01-rocket-before-launch.jpg",
     "./assets/rocket-sequence/web/02-rocket-takeoff.jpg",
     "./assets/rocket-sequence/web/03-rocket-atmosphere.jpg",
-    "./assets/rocket-sequence/web/04-rocket-space.jpg",
     "./assets/rocket-sequence/web/01-rocket-before-launch-mobile.jpg"
   ];
   let loadingTimeout = 0;
@@ -50,7 +47,6 @@
     uniform sampler2D u_frame0;
     uniform sampler2D u_frame1;
     uniform sampler2D u_frame2;
-    uniform sampler2D u_frame3;
     uniform sampler2D u_mobile;
     uniform float u_progress;
     uniform float u_aspect;
@@ -91,7 +87,8 @@
       vec3 first = mix(sampleFrame(u_frame0, uv, 1.7778), sampleFrame(u_mobile, uv, .5625), u_mobileMode);
       vec3 color = mix(first, sampleFrame(u_frame1, uv, 1.7778), smoothstep(.055, .23, p));
       color = mix(color, sampleFrame(u_frame2, uv, 1.7778), smoothstep(.24, .43, p));
-      color = mix(color, sampleFrame(u_frame3, uv, 1.7778), smoothstep(.44, .61, p));
+      float deepSpace = smoothstep(.4, .72, p);
+      color *= mix(vec3(1.0), vec3(.79, .83, .92), deepSpace * .44);
 
       float starLight = stars(v_uv, p) * smoothstep(.31, .55, p);
       color += vec3(.72, .8, .94) * starLight;
@@ -147,20 +144,29 @@
     mobile: gl.getUniformLocation(program, "u_mobileMode"),
     reduced: gl.getUniformLocation(program, "u_reduced")
   };
-  const textureUniforms = ["u_frame0", "u_frame1", "u_frame2", "u_frame3", "u_mobile"];
+  const textureUniforms = ["u_frame0", "u_frame1", "u_frame2", "u_mobile"];
   let ready = false;
   let progress = 0;
+  let visualProgress = 0;
   let frameRequested = false;
+  let lastFrameTime = 0;
+  let firstFrame = true;
   const chapterProgress = [0, .12, .25, .38, .52, .56, .59, .62, .65, .68, .8, .88, 1];
   loadingTimeout = window.setTimeout(() => { if (!ready) fallback(); }, 12000);
 
-  const render = () => {
+  const render = (timestamp) => {
     frameRequested = false;
     if (!ready || document.hidden || canvas.hidden) return;
-    gl.uniform1f(uniforms.progress, progress);
+    const elapsed = Math.min(64, timestamp - (lastFrameTime || timestamp));
+    lastFrameTime = timestamp;
+    visualProgress = firstFrame || reducedMotion ? progress : visualProgress + (progress - visualProgress) * (1 - Math.exp(-elapsed / 145));
+    firstFrame = false;
+    if (Math.abs(progress - visualProgress) < .0003) visualProgress = progress;
+    gl.uniform1f(uniforms.progress, visualProgress);
     gl.uniform1f(uniforms.mobile, window.innerWidth <= 700 ? 1 : 0);
     gl.uniform1f(uniforms.reduced, reducedMotion ? 1 : 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+    if (visualProgress !== progress) requestRender();
   };
   const requestRender = () => {
     if (ready && !frameRequested && !document.hidden) {
@@ -181,11 +187,9 @@
     progress = window.scrollY < 2 ? 0 : chapterProgress[index] + local * (chapterProgress[index + 1] - chapterProgress[index]);
     if (window.scrollY >= maxScroll - 2) progress = 1;
     const midpoint = window.innerHeight * .52;
-    let current = chapters[0];
     chapters.forEach((chapter) => {
       const rect = chapter.getBoundingClientRect();
       const inner = chapter.querySelector(".chapter-inner");
-      if (rect.top <= midpoint && rect.bottom > midpoint) current = chapter;
       if (!inner) return;
       if (window.innerWidth <= 700) {
         inner.style.opacity = "";
@@ -194,13 +198,12 @@
       }
       const entering = Math.min(1, Math.max(0, (window.innerHeight - rect.top) / midpoint));
       const leaving = Math.min(1, Math.max(0, (rect.bottom - midpoint) / (window.innerHeight - midpoint)));
-      const opacity = Math.min(entering, leaving);
+      const visibility = Math.min(entering, leaving);
+      const opacity = visibility * visibility * (3 - 2 * visibility);
       inner.style.opacity = String(opacity);
       inner.style.pointerEvents = opacity < .12 ? "none" : "";
     });
-    if (sceneLabel) sceneLabel.textContent = current?.dataset.sceneTitle || "VERTO STUDIO";
-    if (sceneProgress) sceneProgress.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
-    if (hudFill) hudFill.style.width = `${Math.round(progress * 100)}%`;
+    if (hudFill) hudFill.style.height = `${Math.round(progress * 100)}%`;
     document.body.classList.toggle("near-end", progress > .96);
     requestRender();
   };

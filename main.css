@@ -15,3 +15,7 @@
 @media(max-width:700px){.scene-fallback .hero{background-image:linear-gradient(180deg,rgba(243,240,232,.9),rgba(243,240,232,.42)),url('./assets/rocket-sequence/web/01-rocket-before-launch-mobile.jpg')!important}}
 @media(prefers-reduced-motion:reduce){.scene-loading{transition:none}.scene-canvas{position:absolute;height:100%}}
 .home-scene .section-head>*,.home-scene .statement-grid>*,.home-scene .studio-grid>*,.home-scene .contact-grid>*{min-width:0}
+.brand-symbol{position:relative;display:block;width:34px;height:34px;flex:none;border:0;transform:none;font-size:0}
+.brand-symbol::before{content:'';position:absolute;inset:0;background:currentColor;-webkit-mask:url('./assets/verto-mark.svg') center/contain no-repeat;mask:url('./assets/verto-mark.svg') center/contain no-repeat}
+.brand-symbol::after{content:'';position:absolute;right:0;bottom:0;width:4px;height:4px;border-radius:50%;background:var(--orange)}
+@media(max-width:900px){body:not(.home-experience) .header-cta{display:inline-flex;margin-left:auto;padding:11px 0 11px 14px;font-size:11px;white-space:nowrap}}

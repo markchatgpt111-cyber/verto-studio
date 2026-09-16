@@ -6,11 +6,12 @@
   const nav = document.querySelector("[data-navigation]");
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.querySelectorAll("[data-year]").forEach((node) => { node.textContent = String(new Date().getFullYear()); });
-  const closeMenu = () => { if (!menu || !nav) return; nav.classList.remove("is-open"); body.classList.remove("menu-open"); menu.setAttribute("aria-expanded", "false"); menu.setAttribute("aria-label", "Открыть меню"); };
-  menu?.addEventListener("click", () => { const open = !nav.classList.contains("is-open"); nav.classList.toggle("is-open", open); body.classList.toggle("menu-open", open); menu.setAttribute("aria-expanded", String(open)); menu.setAttribute("aria-label", open ? "Закрыть меню" : "Открыть меню"); });
+  const closeMenu = () => { if (!menu || !nav) return; nav.classList.remove("is-open"); nav.inert = window.innerWidth <= 900; body.classList.remove("menu-open"); menu.setAttribute("aria-expanded", "false"); menu.setAttribute("aria-label", "Открыть меню"); };
+  if (nav) nav.inert = window.innerWidth <= 900;
+  menu?.addEventListener("click", () => { const open = !nav.classList.contains("is-open"); nav.inert = !open; nav.classList.toggle("is-open", open); body.classList.toggle("menu-open", open); menu.setAttribute("aria-expanded", String(open)); menu.setAttribute("aria-label", open ? "Закрыть меню" : "Открыть меню"); });
   nav?.querySelectorAll("a").forEach((link) => link.addEventListener("click", closeMenu));
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenu(); });
-  window.addEventListener("resize", () => { if (window.innerWidth > 900) closeMenu(); }, { passive: true });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape" && nav?.classList.contains("is-open")) { closeMenu(); menu?.focus(); } });
+  window.addEventListener("resize", () => { if (window.innerWidth > 900) closeMenu(); else if (nav && !nav.classList.contains("is-open")) nav.inert = true; }, { passive: true });
   const updateHeader = () => header?.classList.toggle("is-scrolled", window.scrollY > 10);
   updateHeader(); window.addEventListener("scroll", updateHeader, { passive: true });
   const rocket = document.querySelector("[data-rocket-stage]");

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Verto Studio">
-  <defs><linearGradient id="g" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop stop-color="#4f8cff"/><stop offset="1" stop-color="#66c7ff"/></linearGradient></defs>
-  <rect width="64" height="64" rx="18" fill="#071426"/>
-  <rect x="7" y="7" width="50" height="50" rx="14" fill="url(#g)"/>
-  <path d="M18 19h9l5 18 5-18h9L36.5 46h-9L18 19Z" fill="#071426"/>
+  <rect width="64" height="64" rx="14" fill="#090d14"/>
+  <path d="M11 14h7.7L32 43.4 45.2 14H53L35.7 51h-7.4L11 14Z" fill="#f4f2ec"/>
+  <path d="M24.1 14h4.7l4.1 9.2-2.4 5.6L24.1 14Z" fill="#f4f2ec"/>
+  <circle cx="50" cy="48" r="3" fill="#ff7955"/>
 </svg>
